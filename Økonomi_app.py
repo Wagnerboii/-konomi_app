@@ -87,35 +87,32 @@ data = load_data(username)
 
 st.title(f"💰 {username}'s Økonomi - {datetime.now().strftime('%B %Y')}")
 
-# Løn
+# ---------- LØN ----------
 data["løn"] = st.number_input("Løn", value=float(data.get("løn",0)))
 
-# ---------- SESSION STATE TIL NY UDGIFT ----------
-if "add_expense" not in st.session_state:
-    st.session_state.add_expense = 0
+# ---------- SESSION STATE TIL UDGIFTER ----------
+if "udgifter" not in st.session_state:
+    st.session_state.udgifter = data.get("udgifter", [])
 
-# Udgifter
+# ---------- UDGIFTER ----------
 st.subheader("Udgifter")
-udgifter = []
-for i, udgift in enumerate(data.get("udgifter", [])):
+for i, udgift in enumerate(st.session_state.udgifter):
     col1, col2, col3 = st.columns([3,2,2])
-    kategori = col1.text_input("Kategori", udgift.get("kategori",""), key=f"kategori{i}")
-    navn = col2.text_input("Navn", udgift.get("navn",""), key=f"navn{i}")
-    beløb = col3.number_input("Beløb", value=float(udgift.get("beløb",0)), key=f"beløb{i}")
-    udgifter.append({"kategori":kategori, "navn":navn, "beløb":beløb})
+    st.session_state.udgifter[i]["kategori"] = col1.text_input("Kategori", udgift.get("kategori",""), key=f"kategori{i}")
+    st.session_state.udgifter[i]["navn"] = col2.text_input("Navn", udgift.get("navn",""), key=f"navn{i}")
+    st.session_state.udgifter[i]["beløb"] = col3.number_input("Beløb", value=float(udgift.get("beløb",0)), key=f"beløb{i}")
 
 if st.button("➕ Tilføj udgift"):
-    data["udgifter"].append({"kategori":"","navn":"","beløb":0})
-    st.session_state.add_expense += 1  # trigger UI update
+    st.session_state.udgifter.append({"kategori":"","navn":"","beløb":0})
 
 # ---------- RESULTAT ----------
 st.subheader("Oversigt")
-udgifter_sum = sum(u["beløb"] for u in udgifter)
+udgifter_sum = sum(u["beløb"] for u in st.session_state.udgifter)
 tilbage = data["løn"] - udgifter_sum
 
 # Dynamisk liste efter kategori
 kategorier = {}
-for u in udgifter:
+for u in st.session_state.udgifter:
     cat = u["kategori"].strip() or "Andet"
     if cat not in kategorier:
         kategorier[cat] = []
@@ -140,11 +137,13 @@ if kategorier:
     st.bar_chart(df)
 
 # ---------- GEM DATA ----------
-data["udgifter"] = udgifter
+data["udgifter"] = st.session_state.udgifter
 save_data(username, data)
 
-# Logout-knap
+# ---------- LOGOUT ----------
 if st.button("Logout"):
     st.session_state.logged_in = False
     st.session_state.username = ""
+
+
 
