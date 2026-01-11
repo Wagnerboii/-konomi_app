@@ -90,6 +90,10 @@ st.title(f"💰 {username}'s Økonomi - {datetime.now().strftime('%B %Y')}")
 # Løn
 data["løn"] = st.number_input("Løn", value=float(data.get("løn",0)))
 
+# ---------- SESSION STATE TIL NY UDGIFT ----------
+if "add_expense" not in st.session_state:
+    st.session_state.add_expense = 0
+
 # Udgifter
 st.subheader("Udgifter")
 udgifter = []
@@ -100,13 +104,9 @@ for i, udgift in enumerate(data.get("udgifter", [])):
     beløb = col3.number_input("Beløb", value=float(udgift.get("beløb",0)), key=f"beløb{i}")
     udgifter.append({"kategori":kategori, "navn":navn, "beløb":beløb})
 
-if "add_expense" not in st.session_state:
-    st.session_state.add_expense = 0
-
 if st.button("➕ Tilføj udgift"):
     data["udgifter"].append({"kategori":"","navn":"","beløb":0})
     st.session_state.add_expense += 1  # trigger UI update
-
 
 # ---------- RESULTAT ----------
 st.subheader("Oversigt")
@@ -147,6 +147,4 @@ save_data(username, data)
 if st.button("Logout"):
     st.session_state.logged_in = False
     st.session_state.username = ""
-    st.experimental_rerun()
-
 
